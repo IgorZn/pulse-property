@@ -18,8 +18,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import {ILocation} from "@/components/home-prop";
 
-interface PropertyCardProps {
+export interface PropertyCardProps {
     id: string;
     type: string;
     title: string;
@@ -27,7 +28,7 @@ interface PropertyCardProps {
     beds: number;
     baths: number;
     sqft: number;
-    location: Record<string, string>;
+    location: ILocation;
     images?: string[];
     isFavorite?: boolean;
     onFavoriteToggle?: (id: string) => void;

@@ -1,11 +1,22 @@
 'use client'
 
+import properties from "../../../../properties.json";
+import PropertyList from "@/components/property-list";
+
 function Page() {
     return (
-        <div className={'px-4 py-6'}>
-            <div className={'m-auto grid-cols-1 md:grid-cols-6 gap-6'}>
-            </div>
-        </div>
+        <>
+            {properties.length > 0
+                ? (
+                    <div className={'px-4 py-6'}>
+                        <PropertyList/>
+                    </div>
+                )
+                : (<div>
+                    <p>No properties found</p>
+                </div>)
+            }
+        </>
     );
 }
 
