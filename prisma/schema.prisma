@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../prismaClient/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Модель пользователя (владельца недвижимости)
+model User {
+  id         String     @id @default(cuid())
+  email      String     @unique
+  name       String?
+  phone      String?
+  properties Property[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@map("users")
+}
+
+// Модель недвижимости
+model Property {
+  id           String       @id @default(cuid())
+  ownerId      String
+  owner        User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name         String
+  type         PropertyType
+  description  String       @db.Text
+  locationId   String       @unique
+  location     Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  beds         Int
+  baths        Int
+  squareFeet   Int          @map("square_feet")
+  amenities    String[] // Массив строк для удобств
+  rates        Rates        @relation(fields: [ratesId], references: [id])
+  ratesId      String       @unique
+  sellerInfo   SellerInfo   @relation(fields: [sellerInfoId], references: [id])
+  sellerInfoId String       @unique
+  images       String[] // Массив путей к изображениям
+  isFeatured   Boolean      @default(false) @map("is_featured")
+  createdAt    DateTime     @default(now()) @map("createdAt")
+  updatedAt    DateTime     @updatedAt @map("updatedAt")
+
+  @@map("properties")
+}
+
+// Модель локации
+model Location {
+  id       String    @id @default(cuid())
+  street   String
+  city     String
+  state    String
+  zipcode  String
+  property Property?
+
+  @@map("locations")
+}
+
+// Модель цен (rates)
+model Rates {
+  id       String    @id @default(cuid())
+  nightly  Int? // Цена за ночь
+  weekly   Int? // Цена за неделю
+  monthly  Int? // Цена за месяц
+  yearly   Int? // Цена за год
+  property Property?
+
+  @@map("rates")
+}
+
+// Модель информации о продавце
+model SellerInfo {
+  id       String    @id @default(cuid())
+  name     String
+  email    String
+  phone    String
+  property Property?
+
+  @@map("seller_info")
+}
+
+// Enum для типа недвижимости
+enum PropertyType {
+  APARTMENT        @map("Apartment")
+  CONDO            @map("Condo")
+  HOUSE            @map("House")
+  STUDIO           @map("Studio")
+  COTTAGE_OR_CABIN @map("Cottage Or Cabin")
+  CHALET           @map("Chalet")
+}

@@ -1,10 +1,61 @@
-import React from 'react';
+// app/properties/[id]/page.tsx
+import { notFound } from 'next/navigation';
+import { getProperty } from '@/actions/property-actions';
+import PropertyHeader from '@/components/property/property-header';
+import PropertyDetails from '@/components/property/property-details';
+import PropertyAmenities from '@/components/property/property-amenities';
+import PropertyContact from '@/components/property/property-contact';
+import PropertyActions from '@/components/property/property-actions';
+import { Suspense } from 'react';
+import {
+    PropertyHeaderSkeleton,
+    PropertyDetailsSkeleton,
+    PropertyAmenitiesSkeleton,
+    PropertyContactSkeleton,
+    PropertyActionsSkeleton
+} from '@/components/property/property-skeletons';
+import {Property} from "../../../../../prismaClient/prisma/client";
 
-async function Page({params}: {params: {id: string}}) {
-    const { id } = await params
-    return (
-        <div>{id}</div>
-    );
+interface PageProps {
+    params: {
+        id: string;
+    };
 }
 
-export default Page;
+export default async function PropertyPage({ params }: PageProps) {
+    const { id } = await params;
+    const result: Property[]  = await getProperty(id);
+    console.log(result)
+
+    if (!result.success || !result.data) {
+        notFound();
+    }
+
+    const property = result.data;
+
+    return (
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+            <div className="space-y-8">
+                <Suspense fallback={<PropertyHeaderSkeleton />}>
+                    <PropertyHeader property={property} />
+                </Suspense>
+
+                <Suspense fallback={<PropertyDetailsSkeleton />}>
+                    <PropertyDetails property={property} />
+                </Suspense>
+
+                <Suspense fallback={<PropertyAmenitiesSkeleton />}>
+                    <PropertyAmenities amenities={property.amenities} />
+                </Suspense>
+
+                <Suspense fallback={<PropertyContactSkeleton />}>
+                    <PropertyContact sellerInfo={property.sellerInfo} />
+                </Suspense>
+
+                <Suspense fallback={<PropertyActionsSkeleton />}>
+                    <PropertyActions propertyId={property.id} />
+                </Suspense>
+            </div>
+        </div>
+    );
+}

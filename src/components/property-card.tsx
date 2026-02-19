@@ -17,38 +17,41 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import {ILocation} from "@/components/home-prop";
 import {PropertyCardSkeleton} from "@/components/property-card-skeleton";
+import type { PropertyWithIncludes } from "@/types/prisma-utils";
 
-export interface PropertyCardProps {
-    id: string;
-    type: string;
-    title: string;
-    rates: { weekly?: number, monthly?: number, nightly?: number };
-    beds: number;
-    baths: number;
-    sqft: number;
-    location: ILocation;
-    images?: string[];
+interface PropertyCardProps {
+    property: PropertyWithIncludes;  // 👈 используем один пропс с правильным типом
     isFavorite?: boolean;
     onFavoriteToggle?: (id: string) => void;
 }
 
+
 export default function PropertyCard({
-                                         id,
-                                         type,
-                                         title,
-                                         rates,
-                                         beds,
-                                         baths,
-                                         sqft,
-                                         location,
-                                         images = ["/properties/property-placeholder.jpg"],
+                                         property,
                                          isFavorite = false,
                                          onFavoriteToggle
                                      }: PropertyCardProps) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Данные из property
+    const {
+        id,
+        name,
+        type,
+        rates,
+        beds,
+        baths,
+        squareFeet,
+        location,
+        images = ["property-placeholder.jpg"],
+    } = property;
+
+    useEffect(() => {
+        setIsLoading(false);
+    }, []);
 
     const nextImage = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -68,11 +71,9 @@ export default function PropertyCard({
         onFavoriteToggle?.(id);
     };
 
-    const [isLoading, setIsLoading] = useState(true);
-    useEffect(() => {
-        setIsLoading(false);
-    }, []);
-
+    // Определяем цену для отображения
+    const displayPrice = rates.monthly || rates.weekly || rates.nightly;
+    const pricePeriod = rates.monthly ? 'mo' : rates.weekly ? 'wk' : 'night';
 
     if (isLoading) {
         return <PropertyCardSkeleton />;
@@ -80,7 +81,7 @@ export default function PropertyCard({
 
     return (
         <Card
-            className="overflow-hidden hover:shadow-xl transition-all duration-300 group"
+            className="w-96 overflow-hidden hover:shadow-xl transition-all duration-300 group px-6"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
@@ -90,7 +91,7 @@ export default function PropertyCard({
                     ? (
                         <Image
                             src={`/properties/${images[currentImageIndex]}`}
-                            alt={title}
+                            alt={name}
                             fill
                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
@@ -101,7 +102,7 @@ export default function PropertyCard({
                                 <div>
                                     <Image
                                         src={`/properties/${images[currentImageIndex]}`}
-                                        alt={title}
+                                        alt={name}
                                         fill
                                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
@@ -177,43 +178,23 @@ export default function PropertyCard({
             {/* Контент */}
             <CardContent className="p-4">
                 {/* Цена */}
-                {rates.monthly
-                    ? (
-                        <div className="flex justify-between items-start mb-2">
-                            <div>
-                                <span className="text-2xl font-bold">${rates.monthly?.toLocaleString()}</span>
-                                <span className="text-gray-500 text-sm">/mo</span>
-                            </div>
-                            <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                                Featured
-                            </Badge>
-                        </div>
-                    )
-                        : rates.weekly
-                        ? (<div className="flex justify-between items-start mb-2">
-                            <div>
-                                <span className="text-2xl font-bold">${rates.weekly?.toLocaleString()}</span>
-                                <span className="text-gray-500 text-sm">/we</span>
-                            </div>
-                            <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                                Featured
-                            </Badge>
-                        </div>)
-                            : (
-                            <div className="flex justify-between items-start mb-2">
-                                <div>
-                                    <span className="text-2xl font-bold">${rates.nightly?.toLocaleString()}</span>
-                                    <span className="text-gray-500 text-sm">/ni</span>
-                                </div>
-                                <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                                    Featured
-                                </Badge>
-                            </div>
-                        )}
+                <div className="flex justify-between items-start mb-2">
+                    <div>
+                        <span className="text-2xl font-bold">
+                            ${displayPrice?.toLocaleString()}
+                        </span>
+                        <span className="text-gray-500 text-sm">/{pricePeriod}</span>
+                    </div>
+                    {property.isFeatured && (
+                        <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                            Featured
+                        </Badge>
+                    )}
+                </div>
 
 
                 {/* Название */}
-                <h3 className="text-lg font-semibold mb-2 line-clamp-1">{title}</h3>
+                <h3 className="text-lg font-semibold mb-2 line-clamp-1">{name}</h3>
 
                 {/* Характеристики */}
                 <div className="grid grid-cols-3 gap-2 text-gray-600 text-sm mb-4">
@@ -227,7 +208,7 @@ export default function PropertyCard({
                     </div>
                     <div className="flex items-center gap-1">
                         <Square className="h-4 w-4"/>
-                        <span>{sqft.toLocaleString()} sqft</span>
+                        <span>{squareFeet} sqft</span>
                     </div>
                 </div>
 

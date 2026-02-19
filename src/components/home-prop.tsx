@@ -2,69 +2,41 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import properties from '../../properties.json'
 import PropertyCard from "@/components/property-card";
+import type { PropertyWithIncludes } from "@/types/prisma-utils";
+import { getRandomProperties } from '@/actions/property-actions';
+import {Button} from "@/components/ui/button";
 
-// Интерфейс для локации
-export interface ILocation {
-    street: string;
-    city: string;
-    state: string;
-    zipcode: string;
-}
 
-// Интерфейс для rates (цен)
-interface Rates {
-    weekly?: number;      // опционально, т.к. может быть не указано
-    monthly?: number;     // опционально, т.к. может быть не указано
-    nightly?: number;     // добавлю на всякий случай, если понадобится
-}
-
-// Основной интерфейс для свойства
-export interface Property {
-    _id: string;
-    owner: string;
-    name: string;
-    type: string;
-    description: string;
-    location: ILocation;
-    beds: number;
-    baths: number;
-    square_feet: number;
-    amenities: string[];
-    rates: Rates;
-    images?: string[];     // опционально, если есть изображения
-    isAvailable?: boolean; // опционально, статус доступности
-    createdAt?: string;    // опционально, дата создания
-    updatedAt?: string;    // опционально, дата обновления
-}
-
-// Для массива свойств
-export type Properties = Property[];
-
-// Для случайной выборки (randomSelection)
-export type RandomPropertySelection = Property[];
 
 function HomeProp() {
-    const [randomProps, setRandomProps] = useState<Properties>([]);
+    const [randomProps, setRandomProps] = useState<PropertyWithIncludes[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
 
     useEffect(() => {
-        // Имитация загрузки данных
-        const timer = setTimeout(() => {
-            const getRandomInt = (max: number) => Math.floor(Math.random() * max);
+        async function fetchRandomProperties() {
+            try {
+                setIsLoading(true);
+                // Вызываем server action
+                const result = await getRandomProperties(3);
 
-            const randomSelection = [
-                properties[getRandomInt(properties.length - 1)],
-                properties[getRandomInt(properties.length - 2)],
-                properties[getRandomInt(properties.length)],
-            ];
+                console.log(result.data)
+                if (result.success && result.data) {
+                    setRandomProps(result.data);
+                } else {
+                    setError(result.error || 'Failed to load properties');
+                }
+            } catch (err) {
+                setError('An error occurred while loading properties');
+                console.error(err);
+            } finally {
+                setIsLoading(false);
+            }
+        }
 
-            setRandomProps(randomSelection);
-            setIsLoading(false);
-        }, 100);
-
-        return () => clearTimeout(timer);
+        fetchRandomProperties();
     }, []);
 
     if (isLoading) {
@@ -80,22 +52,31 @@ function HomeProp() {
         );
     }
 
+    if (error) {
+        return (
+            <div className="container mx-auto px-4 py-8">
+                <h2 className="text-2xl font-bold mb-6">Available Properties</h2>
+                <div className="text-center text-red-500">
+                    <p>{error}</p>
+                    <Button
+                        onClick={() => window.location.reload()}
+                        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                        Try Again
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="container mx-auto px-4 py-8">
             <h2 className="text-2xl font-bold mb-6">Available Properties</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {randomProps.map((property: Property) => (
+                {randomProps.map((property) => (
                     <PropertyCard
-                        key={property._id}
-                        id={property._id}
-                        type={property.type}
-                        title={property.description}
-                        rates={property.rates}
-                        beds={property.beds}
-                        baths={property.baths}
-                        sqft={property.square_feet}
-                        location={property.location}
-                        images={property.images}
+                        key={property.id}
+                        property={property}
                     />
                 ))}
             </div>
