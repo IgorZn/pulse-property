@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Button } from './ui/button';
 import { Search, MapPin } from "lucide-react";
 import {
@@ -10,6 +10,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {Input} from "@/components/ui/input";
+import {HeroSkeleton} from "@/components/hero-skeleton";
 
 function Hero() {
     const [location, setLocation] = useState('');
@@ -20,6 +21,16 @@ function Hero() {
         // Здесь будет логика поиска
         console.log({ location, propertyType });
     };
+
+    const [isLoading, setIsLoading] = useState(true);
+    useEffect(() => {
+        setIsLoading(false);
+    }, []);
+
+
+    if (isLoading) {
+        return <HeroSkeleton />;
+    }
 
     return (
         <section className="w-full py-12">

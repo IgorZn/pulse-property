@@ -1,5 +1,7 @@
-// components/InfoBoxes.tsx
+'use client'
 import InfoBox from './InfoBox';
+import React, {useEffect, useState} from "react";
+import {InfoBoxesSkeleton} from "@/components/infoboxes-skeleton";
 
 interface InfoBoxesProps {
     boxes?: {
@@ -40,6 +42,16 @@ export default function InfoBoxes({ boxes }: InfoBoxesProps) {
     ];
 
     const infoBoxes = boxes || defaultBoxes;
+
+    const [isLoading, setIsLoading] = useState(true);
+    useEffect(() => {
+        setIsLoading(false);
+    }, []);
+
+
+    if (isLoading) {
+        return <InfoBoxesSkeleton />;
+    }
 
     return (
         <section className="my-8">

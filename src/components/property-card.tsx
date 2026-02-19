@@ -1,7 +1,7 @@
 // components/PropertyCard.tsx
 'use client';
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Button} from "@/components/ui/button";
 import {Card, CardContent} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
@@ -10,7 +10,6 @@ import {
     Bed,
     Square,
     MapPin,
-    Calendar,
     Heart,
     Share2,
     ChevronLeft,
@@ -19,6 +18,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import {ILocation} from "@/components/home-prop";
+import {PropertyCardSkeleton} from "@/components/property-card-skeleton";
 
 export interface PropertyCardProps {
     id: string;
@@ -67,6 +67,16 @@ export default function PropertyCard({
         e.stopPropagation();
         onFavoriteToggle?.(id);
     };
+
+    const [isLoading, setIsLoading] = useState(true);
+    useEffect(() => {
+        setIsLoading(false);
+    }, []);
+
+
+    if (isLoading) {
+        return <PropertyCardSkeleton />;
+    }
 
     return (
         <Card
@@ -167,15 +177,40 @@ export default function PropertyCard({
             {/* Контент */}
             <CardContent className="p-4">
                 {/* Цена */}
-                <div className="flex justify-between items-start mb-2">
-                    <div>
-                        <span className="text-2xl font-bold">${rates.monthly?.toLocaleString()}</span>
-                        <span className="text-gray-500 text-sm">/mo</span>
-                    </div>
-                    <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                        Featured
-                    </Badge>
-                </div>
+                {rates.monthly
+                    ? (
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <span className="text-2xl font-bold">${rates.monthly?.toLocaleString()}</span>
+                                <span className="text-gray-500 text-sm">/mo</span>
+                            </div>
+                            <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                                Featured
+                            </Badge>
+                        </div>
+                    )
+                        : rates.weekly
+                        ? (<div className="flex justify-between items-start mb-2">
+                            <div>
+                                <span className="text-2xl font-bold">${rates.weekly?.toLocaleString()}</span>
+                                <span className="text-gray-500 text-sm">/we</span>
+                            </div>
+                            <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                                Featured
+                            </Badge>
+                        </div>)
+                            : (
+                            <div className="flex justify-between items-start mb-2">
+                                <div>
+                                    <span className="text-2xl font-bold">${rates.nightly?.toLocaleString()}</span>
+                                    <span className="text-gray-500 text-sm">/ni</span>
+                                </div>
+                                <Badge variant="secondary" className="bg-blue-50 text-blue-700">
+                                    Featured
+                                </Badge>
+                            </div>
+                        )}
+
 
                 {/* Название */}
                 <h3 className="text-lg font-semibold mb-2 line-clamp-1">{title}</h3>
