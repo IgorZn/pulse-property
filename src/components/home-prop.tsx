@@ -7,7 +7,11 @@ import type { PropertyWithIncludes } from "@/types/prisma-utils";
 import { getRandomProperties } from '@/actions/property-actions';
 import {Button} from "@/components/ui/button";
 
-
+export type PropertiesResponse = {
+    success: boolean;
+    data?: PropertyWithIncludes[];
+    error?: string;
+};
 
 function HomeProp() {
     const [randomProps, setRandomProps] = useState<PropertyWithIncludes[]>([]);
@@ -22,7 +26,6 @@ function HomeProp() {
                 // Вызываем server action
                 const result = await getRandomProperties(3);
 
-                console.log(result.data)
                 if (result.success && result.data) {
                     setRandomProps(result.data);
                 } else {

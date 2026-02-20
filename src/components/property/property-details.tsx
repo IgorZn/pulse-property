@@ -1,9 +1,9 @@
 // components/property/property-details.tsx
-import { Bed, Bath, Square, Home } from "lucide-react";
-import { Property } from "@/types/app-types";
+import { Bed, Bath, Square } from "lucide-react";
+import type { PropertyWithIncludes } from "@/types/prisma-utils";
 
 interface PropertyDetailsProps {
-    property: Property;
+    property: PropertyWithIncludes;
 }
 
 export default function PropertyDetails({ property }: PropertyDetailsProps) {

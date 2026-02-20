@@ -39,3 +39,15 @@ export type PropertyWithLocation = PropertyWithSelect<{
         };
     };
 }>;
+
+export type PropertiesResponse = {
+    success: boolean;
+    data?: PropertyWithIncludes[] | null;
+    error?: string;
+};
+
+export type PropertyResponse = {
+    success: boolean;
+    data?: PropertyWithIncludes;
+    error?: string;
+};
