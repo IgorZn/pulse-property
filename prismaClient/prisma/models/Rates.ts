@@ -393,14 +393,6 @@ export type RatesUpdateOneRequiredWithoutPropertyNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.RatesUpdateToOneWithWhereWithoutPropertyInput, Prisma.RatesUpdateWithoutPropertyInput>, Prisma.RatesUncheckedUpdateWithoutPropertyInput>
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type RatesCreateWithoutPropertyInput = {
   id?: string
   nightly?: number | null

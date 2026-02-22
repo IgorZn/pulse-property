@@ -32,7 +32,6 @@ interface PropertyResponse {
 export default async function PropertyPage({ params }: PageProps) {
     const { id } = await params;
     const result: PropertyResponse  = await getProperty(id);
-    console.log(result)
 
     if (!result.success || !result.data) {
         notFound();

@@ -2,33 +2,24 @@
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input"
-import {Label} from "@/components/ui/label"
 import {
     Sheet,
     SheetClose,
     SheetContent,
-    SheetDescription,
     SheetFooter,
-    SheetHeader,
-    SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet"
 import {Menu} from "lucide-react";
 import {cn} from "@/lib/utils";
+import {SignInButton} from "@/components/auth/signin-button";
 
 function Navbar() {
     const pathname = usePathname()
     const navItemsR = [
         {href: '/', label: 'Home'},
         {href: '/properties', label: 'Properties'},
-        {href: '/addProperties', label: 'Add Properties'},
+        {href: '/properties/add', label: 'Add Properties'},
     ];
-    const navItemsL = [
-        {href: '/', label: 'Home'},
-        {href: '/about', label: 'About'},
-    ];
-
 
     return (
         <div>
@@ -56,17 +47,7 @@ function Navbar() {
 
                             {/* left */}
                             <div className={'flex'}>
-                                {navItemsL.map((item) => {
-                                    const isActive = pathname === item.href;
-
-                                    return (
-                                        <Link key={item.href} href={item.href}>
-                                            <Button className={'mx-2'} variant={isActive ? 'default' : 'outline'}>
-                                                {item.label}
-                                            </Button>
-                                        </Link>
-                                    );
-                                })}
+                                <SignInButton />
                             </div>
 
                         </div>

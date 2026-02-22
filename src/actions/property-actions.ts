@@ -81,17 +81,53 @@ function mapToPropertyType(type: string): PropertyType {
     return typeMap[type] || PropertyType.APARTMENT;
 }
 
+// Функция для сохранения файлов
+async function saveImages(formData: FormData): Promise<string[]> {
+    const images: string[] = [];
+    const files = formData.getAll('images') as File[];
+
+    for (const file of files) {
+        if (file.size > 0) {
+            // Здесь должна быть логика сохранения файла
+            // Например, загрузка в S3 или сохранение локально
+            const fileName = `${Date.now()}-${file.name}`;
+            // Сохраняем файл...
+            images.push(fileName);
+        }
+    }
+
+    return images;
+}
+
+// Обновленная функция createProperty
 export async function createProperty(formData: FormData) {
+    console.log(formData)
     try {
-        // Используем транзакцию для создания всех связанных записей
+        // Сохраняем изображения
+        const imageUrls = await saveImages(formData);
+
+        // Получаем массив удобств
+        const amenitiesStr = formData.get('amenities') as string;
+        const amenities = amenitiesStr ? amenitiesStr.split(',').filter(Boolean) : [];
+
+        // Валидация числовых полей
+        const beds = parseInt(formData.get('beds') as string);
+        const baths = parseInt(formData.get('baths') as string);
+        const squareFeet = parseInt(formData.get('squareFeet') as string);
+
+        // Проверяем, что числа валидны
+        if (isNaN(beds) || isNaN(baths) || isNaN(squareFeet)) {
+            throw new Error('Invalid number format for beds, baths, or square feet');
+        }
+
         const result = await prisma.$transaction(async (tx) => {
             // 1. Создаем location
             const location = await tx.location.create({
                 data: {
-                    street: formData.get('street') as string,
+                    street: formData.get('street') as string || '',
                     city: formData.get('city') as string,
                     state: formData.get('state') as string,
-                    zipcode: formData.get('zipcode') as string,
+                    zipcode: formData.get('zipcode') as string || '',
                 }
             });
 
@@ -107,28 +143,36 @@ export async function createProperty(formData: FormData) {
             // 3. Создаем sellerInfo
             const sellerInfo = await tx.sellerInfo.create({
                 data: {
-                    name: formData.get('sellerName') as string,
+                    name: formData.get('sellerName') as string || '',
                     email: formData.get('sellerEmail') as string,
-                    phone: formData.get('sellerPhone') as string,
+                    phone: formData.get('sellerPhone') as string || '',
                 }
             });
 
-            // 4. Создаем property
+            // 4. Создаем property с connect для owner
             const property = await tx.property.create({
                 data: {
                     name: formData.get('name') as string,
                     type: mapToPropertyType(formData.get('type') as string),
-                    description: formData.get('description') as string,
-                    beds: parseInt(formData.get('beds') as string),
-                    baths: parseInt(formData.get('baths') as string),
-                    squareFeet: parseInt(formData.get('squareFeet') as string),
-                    ownerId: 'user-id-from-session', // 👈 замените на реальный ID
-                    locationId: location.id,
-                    ratesId: rates.id,
-                    sellerInfoId: sellerInfo.id,
-                    amenities: (formData.get('amenities') as string)?.split(',').map(a => a.trim()) || [],
-                    images: (formData.get('images') as string)?.split(',').map(i => i.trim()) || [],
-                    isFeatured: formData.get('isFeatured') === 'true',
+                    description: formData.get('description') as string || '',
+                    beds: beds,
+                    baths: baths,
+                    squareFeet: squareFeet,
+                    owner: {  // 👈 используем connect вместо ownerId
+                        connect: { id: formData.get('ownerId') as string }
+                    },
+                    location: {  // 👈 connect для location
+                        connect: { id: location.id }
+                    },
+                    rates: {  // 👈 connect для rates
+                        connect: { id: rates.id }
+                    },
+                    sellerInfo: {  // 👈 connect для sellerInfo
+                        connect: { id: sellerInfo.id }
+                    },
+                    amenities: amenities,
+                    images: imageUrls,
+                    isFeatured: false,
                 },
                 include: {
                     location: true,
